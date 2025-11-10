@@ -1,0 +1,5 @@
+usr/include/libusockets.h
+usr/lib/*/libuSockets.a
+usr/lib/*/pkgconfig/libusockets.pc
+
+

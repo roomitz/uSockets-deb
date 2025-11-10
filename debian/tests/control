@@ -1,0 +1,8 @@
+Tests: compilation-test
+Depends: @, gcc, pkg-config, libc6-dev
+
+Tests: installation-test
+Depends: @, pkg-config
+
+Tests: pkg-config-test
+Depends: @, gcc, pkg-config, libc6-dev

@@ -1,0 +1,6 @@
+e04be2063eff94ed63131241bb51d6bb  usr/include/libusockets.h
+9061bade101043cb7f1078d9d683b4dd  usr/lib/x86_64-linux-gnu/libuSockets.a
+c8d4dc04afcbaa60af42d810956e1a08  usr/lib/x86_64-linux-gnu/pkgconfig/libusockets.pc
+bd52ebcc7a159f5aa57c2c90a3d468e7  usr/share/doc/libusockets-dev/changelog.Debian.gz
+80c90a6c877744774cd497c5c929299d  usr/share/doc/libusockets-dev/copyright
+bb4f40ac14fc5b89a1c5eeec73f2c30f  usr/share/lintian/overrides/libusockets-dev

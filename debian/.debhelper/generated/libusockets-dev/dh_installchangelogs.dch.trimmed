@@ -1,0 +1,5 @@
+libusockets (0.8.8-1) UNRELEASED; urgency=medium
+
+  * Initial release. (Closes: #979860)
+
+ -- Ruslan Dautov <r.dautoff2016@yandex.ru>  Wed, 29 Oct 2025 16:43:01 +0300

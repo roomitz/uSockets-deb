@@ -1,0 +1,16 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: uSockets
+Source: https://github.com/uNetworking/uSockets
+Upstream-Contact: https://github.com/uNetworking/uSockets
+
+Files: *
+Copyright: 2018-2025 uNetworking AB
+License: Apache-2.0
+
+Files: debian/*
+Copyright: 2025 Ruslan Dautov <r.dautoff2016@yandex.ru>
+License: Apache-2.0
+
+License: Apache-2.0
+ On Debian systems, the complete text of the Apache License 2.0
+ can be found in "/usr/share/common-licenses/Apache-2.0".

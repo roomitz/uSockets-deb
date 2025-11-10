@@ -1,0 +1,16 @@
+Package: libusockets-dev
+Source: libusockets
+Version: 0.8.8-1
+Architecture: amd64
+Maintainer: Ruslan Dautov <r.dautoff2016@yandex.ru>
+Installed-Size: 785
+Suggests: libssl-dev, libuv1-dev
+Section: libdevel
+Priority: optional
+Multi-Arch: same
+Homepage: https://github.com/uNetworking/uSockets
+Description: Development files for libusockets
+ uSockets is a minimal cross-platform eventing library.
+ .
+ This package contains the header files and static library
+ needed for developing applications using uSockets.
