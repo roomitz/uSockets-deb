@@ -45,11 +45,9 @@ jobs:
           VERSION=${{ steps.version.outputs.version }}
           git archive --format=tar --prefix=libusockets-${VERSION}/ HEAD | gzip > ../libusockets_${VERSION}.orig.tar.gz
       
-      - name: Remove .github directory
-        run: rm -rf .github
-      
-      - name: Build source and binary packages
+      - name: Build packages
         run: |
+          rm -rf .github
           if [ "${{ matrix.arch }}" = "amd64" ]; then
             dpkg-buildpackage -us -uc
           else
@@ -59,11 +57,7 @@ jobs:
       - name: Collect artifacts
         run: |
           mkdir -p artifacts
-          mv ../*.deb artifacts/ 2>/dev/null || true
-          if [ "${{ matrix.arch }}" = "amd64" ]; then
-            mv ../*.dsc ../*.tar.* artifacts/ 2>/dev/null || true
-          fi
-          mv ../*.changes ../*.buildinfo artifacts/ 2>/dev/null || true
+          mv ../*.deb ../*.dsc ../*.tar.* ../*.changes ../*.buildinfo artifacts/ 2>/dev/null || true
       
       - name: Run lintian
         run: lintian -i artifacts/*.changes || true
