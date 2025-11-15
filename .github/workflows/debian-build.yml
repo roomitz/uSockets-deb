@@ -70,9 +70,7 @@ jobs:
         run: |
           cd artifacts
           echo "🧪 Running autopkgtest..."
-          
-          # Простой и надежный способ
-          sudo autopkgtest *.dsc -- unshare
+          sudo autopkgtest *.dsc -- null
         continue-on-error: true
       
       - name: Upload build artifacts
