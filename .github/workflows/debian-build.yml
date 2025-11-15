@@ -30,6 +30,24 @@ jobs:
             autopkgtest \
             systemd-container
       
+      - name: Create upstream tarball (.orig.tar.gz)
+        run: |
+          # Получить версию из changelog
+          VERSION=$(head -1 debian/changelog | sed 's/.*(\([^)]*\)).*/\1/' | cut -d- -f1)
+          
+          # Очистить временные файлы
+          rm -rf debian/.debhelper debian/tmp debian/libusockets-dev
+          
+          # Создать tar.gz архив источников (исключить debian/, .git, .github)
+          tar --exclude=debian \
+              --exclude=.git \
+              --exclude=.github \
+              --exclude=.gitignore \
+              -czf ../libusockets_${VERSION}.orig.tar.gz .
+          
+          echo "✅ Created upstream tarball:"
+          ls -lh ../libusockets_*.orig.tar.gz
+      
       - name: Build Debian source package (DSC)
         run: dpkg-buildpackage -S -us -uc
       
@@ -52,8 +70,9 @@ jobs:
       - name: Run autopkgtest
         run: |
           cd artifacts
+          
           # Установить зависимости для тестирования
-          sudo apt-get install -y -t testing autopkgtest autodep8 || true
+          sudo apt-get install -y autopkgtest autodep8 || true
           
           # Запустить autopkgtest с DSC пакетом
           autopkgtest \
