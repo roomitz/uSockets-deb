@@ -16,7 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
       
       - name: Install build dependencies
         run: |
@@ -27,7 +28,8 @@ jobs:
             libssl-dev \
             libuv1-dev \
             lintian \
-            autopkgtest
+            autopkgtest \
+            autodep8
       
       - name: Create upstream tarball (.orig.tar.gz)
         run: |
@@ -55,26 +57,33 @@ jobs:
           mv ../*.buildinfo artifacts/ || true
           mv ../*.dsc artifacts/ || true
           mv ../*.tar.* artifacts/ || true
+          echo "✅ Artifacts collected:"
+          ls -lh artifacts/
       
       - name: Check with lintian
-        run: lintian -i artifacts/*.changes || true
+        run: |
+          echo "🔍 Running lintian checks..."
+          lintian -i artifacts/*.changes || true
         continue-on-error: true
       
       - name: Run autopkgtest
         run: |
           cd artifacts
-          sudo apt-get install -y autopkgtest autodep8 || true
+          echo "🧪 Running autopkgtest..."
           
+          # Запустить autopkgtest с правильным синтаксисом
           autopkgtest \
+            --timeout-run=600 \
             *.dsc \
             -- \
             null \
-            --timeout-run=600 \
-            || true
+            || echo "⚠️ autopkgtest completed with warnings"
         continue-on-error: true
       
-      - name: Upload artifacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: debian-packages
           path: artifacts/*
+          retention-days: 90
+
