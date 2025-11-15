@@ -27,31 +27,19 @@ jobs:
             libssl-dev \
             libuv1-dev \
             lintian \
-            autopkgtest \
-            rsync
+            autopkgtest
       
       - name: Create upstream tarball (.orig.tar.gz)
         run: |
           VERSION=$(head -1 debian/changelog | sed 's/.*(\([^)]*\)).*/\1/' | cut -d- -f1)
-          
-          rm -rf debian/.debhelper debian/tmp debian/libusockets-dev
-          
-          # Создать временную копию без debian/ и .github/
-          TMPDIR=$(mktemp -d)
-          rsync -a \
-            --exclude=debian \
-            --exclude=.git \
-            --exclude=.github \
-            --exclude=.gitignore \
-            --exclude=artifacts \
-            . ${TMPDIR}/libusockets-${VERSION}/
-          
-          # Создать tarball
-          tar -C ${TMPDIR} -czf ../libusockets_${VERSION}.orig.tar.gz libusockets-${VERSION}/
-          rm -rf ${TMPDIR}
-          
+          git archive --format=tar --prefix=libusockets-${VERSION}/ HEAD | gzip > ../libusockets_${VERSION}.orig.tar.gz
           echo "✅ Created upstream tarball:"
           ls -lh ../libusockets_*.orig.tar.gz
+      
+      - name: Remove .github directory
+        run: |
+          rm -rf .github
+          echo "✅ Removed .github/ from working directory"
       
       - name: Build Debian source package (DSC)
         run: dpkg-buildpackage -S -us -uc
