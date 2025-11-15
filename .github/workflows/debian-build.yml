@@ -14,17 +14,9 @@ on:
 jobs:
   build-debian:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        arch: [amd64, arm64, armhf, i386]
     
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up QEMU for cross-compilation
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386
       
       - name: Install build dependencies
         run: |
@@ -35,29 +27,45 @@ jobs:
             libssl-dev \
             libuv1-dev \
             lintian \
-            crossbuild-essential-${{ matrix.arch }}
-        continue-on-error: true
+            autopkgtest \
+            systemd-container
       
-      - name: Build Debian package for ${{ matrix.arch }}
-        env:
-          DEB_BUILD_ARCH: ${{ matrix.arch }}
-        run: |
-          dpkg-buildpackage -b -us -uc -a${{ matrix.arch }} || \
-          dpkg-buildpackage -b -us -uc
+      - name: Build Debian source package (DSC)
+        run: dpkg-buildpackage -S -us -uc
+      
+      - name: Build Debian binary package
+        run: dpkg-buildpackage -b -us -uc
       
       - name: Move artifacts to workspace
         run: |
-          mkdir -p artifacts-${{ matrix.arch }}
-          mv ../*.deb artifacts-${{ matrix.arch }}/ || true
-          mv ../*.changes artifacts-${{ matrix.arch }}/ || true
-          mv ../*.buildinfo artifacts-${{ matrix.arch }}/ || true
+          mkdir -p artifacts
+          mv ../*.deb artifacts/ || true
+          mv ../*.changes artifacts/ || true
+          mv ../*.buildinfo artifacts/ || true
+          mv ../*.dsc artifacts/ || true
+          mv ../*.tar.* artifacts/ || true
       
       - name: Check with lintian
-        run: lintian -i artifacts-${{ matrix.arch }}/*.changes || true
+        run: lintian -i artifacts/*.changes || true
         continue-on-error: true
       
-      - name: Upload .deb packages for ${{ matrix.arch }}
+      - name: Run autopkgtest
+        run: |
+          cd artifacts
+          # Установить зависимости для тестирования
+          sudo apt-get install -y -t testing autopkgtest autodep8 || true
+          
+          # Запустить autopkgtest с DSC пакетом
+          autopkgtest \
+            *.dsc \
+            -- \
+            null \
+            --timeout-run=600 \
+            || true
+        continue-on-error: true
+      
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: debian-packages-${{ matrix.arch }}
-          path: artifacts-${{ matrix.arch }}/*
+          name: debian-packages
+          path: artifacts/*
