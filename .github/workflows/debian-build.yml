@@ -66,18 +66,13 @@ jobs:
           lintian -i artifacts/*.changes || true
         continue-on-error: true
       
-      - name: Run autopkgtest with unshare
+      - name: Run autopkgtest
         run: |
           cd artifacts
           echo "🧪 Running autopkgtest..."
           
-          # Использовать unshare testbed для работы с привилегиями
-          sudo autopkgtest \
-            *.dsc \
-            -- \
-            unshare \
-            -p -f -u -n -i -m -C \
-            || echo "⚠️ autopkgtest completed with warnings"
+          # Простой и надежный способ
+          sudo autopkgtest *.dsc -- unshare
         continue-on-error: true
       
       - name: Upload build artifacts
