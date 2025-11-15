@@ -6,53 +6,7 @@ on:
       - 'v*'
 
 jobs:
-  build-source:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Extract version
-        id: version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-      
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential debhelper-compat libssl-dev libuv1-dev autopkgtest
-      
-      - name: Create upstream tarball
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
-          git archive --format=tar --prefix=libusockets-${VERSION}/ HEAD | gzip > ../libusockets_${VERSION}.orig.tar.gz
-      
-      - name: Build source package
-        run: |
-          rm -rf .github
-          dpkg-buildpackage -S -us -uc
-      
-      - name: Run autopkgtest
-        run: |
-          sudo autopkgtest ../*.dsc -- null
-        continue-on-error: true
-      
-      - name: Collect source artifacts
-        run: |
-          mkdir -p artifacts-source
-          mv ../*.dsc ../*.tar.* ../*.changes ../*.buildinfo artifacts-source/ 2>/dev/null || true
-      
-      - name: Upload source artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: debian-source
-          path: artifacts-source/*
-
-  build-binary:
-    needs: build-source
+  build-and-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -67,21 +21,42 @@ jobs:
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       
       - name: Set up QEMU
         if: matrix.arch != 'amd64'
         uses: docker/setup-qemu-action@v3
       
-      - name: Install dependencies
+      - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential debhelper-compat libssl-dev libuv1-dev
+          sudo apt-get install -y \
+            build-essential \
+            debhelper-compat \
+            libssl-dev \
+            libuv1-dev \
+            lintian \
+            autopkgtest \
+            autodep8
           sudo apt-get install -y crossbuild-essential-${{ matrix.arch }} || true
       
       - name: Create upstream tarball
         run: |
           VERSION=${{ steps.version.outputs.version }}
           git archive --format=tar --prefix=libusockets-${VERSION}/ HEAD | gzip > ../libusockets_${VERSION}.orig.tar.gz
+      
+      - name: Build source package
+        if: matrix.arch == 'amd64'
+        run: |
+          rm -rf .github
+          dpkg-buildpackage -S -us -uc
+      
+      - name: Run autopkgtest
+        if: matrix.arch == 'amd64'
+        run: |
+          cd ..
+          sudo autopkgtest *.dsc -- null
+        continue-on-error: true
       
       - name: Build binary package
         run: |
@@ -92,19 +67,27 @@ jobs:
             dpkg-buildpackage -b -us -uc -a${{ matrix.arch }} || dpkg-buildpackage -b -us -uc
           fi
       
-      - name: Collect binary artifacts
+      - name: Collect artifacts
         run: |
-          mkdir -p artifacts-${{ matrix.arch }}
-          mv ../*.deb ../*.changes ../*.buildinfo artifacts-${{ matrix.arch }}/ 2>/dev/null || true
+          mkdir -p artifacts
+          mv ../*.deb artifacts/ 2>/dev/null || true
+          if [ "${{ matrix.arch }}" = "amd64" ]; then
+            mv ../*.dsc ../*.tar.* artifacts/ 2>/dev/null || true
+          fi
+          mv ../*.changes ../*.buildinfo artifacts/ 2>/dev/null || true
       
-      - name: Upload binary artifacts
+      - name: Run lintian
+        run: lintian -i artifacts/*.changes || true
+        continue-on-error: true
+      
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: debian-binary-${{ matrix.arch }}
-          path: artifacts-${{ matrix.arch }}/*
+          name: debian-packages-${{ matrix.arch }}
+          path: artifacts/*
 
   create-release:
-    needs: [build-source, build-binary]
+    needs: build-and-test
     runs-on: ubuntu-latest
     
     steps:
