@@ -1,6 +1,7 @@
 name: Build Debian Package
 
 on:
+  workflow_dispatch:
   push:
     branches: [ master, main ]
     paths:
@@ -30,15 +31,19 @@ jobs:
       - name: Build Debian package
         run: dpkg-buildpackage -b -us -uc
       
+      - name: Move artifacts to workspace
+        run: |
+          mkdir -p artifacts
+          mv ../*.deb artifacts/ || true
+          mv ../*.changes artifacts/ || true
+          mv ../*.buildinfo artifacts/ || true
+      
       - name: Check with lintian
-        run: lintian -i ../libusockets-dev_*.changes || true
+        run: lintian -i artifacts/*.changes || true
         continue-on-error: true
       
       - name: Upload .deb packages
         uses: actions/upload-artifact@v4
         with:
           name: debian-packages
-          path: |
-            ../*.deb
-            ../*.changes
-            ../*.buildinfo
+          path: artifacts/*
