@@ -71,13 +71,8 @@ jobs:
           cd artifacts
           echo "🧪 Running autopkgtest..."
           
-          # Запустить autopkgtest с правильным синтаксисом
-          autopkgtest \
-            --timeout-run=600 \
-            *.dsc \
-            -- \
-            null \
-            || echo "⚠️ autopkgtest completed with warnings"
+          # Запуск autopkgtest без unsupported опций
+          autopkgtest *.dsc -- null || echo "⚠️ autopkgtest completed with warnings"
         continue-on-error: true
       
       - name: Upload build artifacts
@@ -86,4 +81,3 @@ jobs:
           name: debian-packages
           path: artifacts/*
           retention-days: 90
-
