@@ -1,0 +1,117 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on tags like v0.8.9-1
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64, armhf]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      
+      - name: Set up QEMU for cross-compilation
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+      
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            debhelper-compat \
+            libssl-dev \
+            libuv1-dev \
+            crossbuild-essential-${{ matrix.arch }} || true
+      
+      - name: Build Debian package for ${{ matrix.arch }}
+        run: |
+          if [ "${{ matrix.arch }}" = "amd64" ]; then
+            dpkg-buildpackage -b -us -uc
+          else
+            dpkg-buildpackage -b -us -uc -a${{ matrix.arch }} || dpkg-buildpackage -b -us -uc
+          fi
+          
+      - name: Move artifacts to workspace
+        run: |
+          mkdir -p artifacts-${{ matrix.arch }}
+          mv ../*.deb artifacts-${{ matrix.arch }}/ || true
+          mv ../*.changes artifacts-${{ matrix.arch }}/ || true
+          mv ../*.buildinfo artifacts-${{ matrix.arch }}/ || true
+      
+      - name: Upload artifacts for ${{ matrix.arch }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: debian-packages-${{ matrix.arch }}
+          path: artifacts-${{ matrix.arch }}/*
+  
+  create-release:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts
+      
+      - name: Prepare release files
+        run: |
+          mkdir -p release-files
+          find all-artifacts -type f -exec cp {} release-files/ \;
+          ls -la release-files/
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ steps.version.outputs.tag }}
+          body: |
+            ## libusockets ${{ steps.version.outputs.version }}
+            
+            Debian package for uSockets library.
+            
+            ### Build Information
+            - Version: ${{ steps.version.outputs.version }}
+            - Commit: ${{ github.sha }}
+            - Build Date: ${{ github.event.head_commit.timestamp }}
+            
+            ### Supported Architectures
+            - amd64 (Intel/AMD 64-bit)
+            - arm64 (ARM 64-bit)
+            - armhf (ARM 32-bit hard float)
+            
+            ### Installation
+            ```
+            # Download the .deb for your architecture
+            wget https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.tag }}/libusockets-dev_${{ steps.version.outputs.version }}_<arch>.deb
+            
+            # Install
+            sudo dpkg -i libusockets-dev_${{ steps.version.outputs.version }}_<arch>.deb
+            ```
+          files: release-files/*
+          draft: false
+          prerelease: false
