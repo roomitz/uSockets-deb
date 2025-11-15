@@ -45,24 +45,13 @@ jobs:
           VERSION=${{ steps.version.outputs.version }}
           git archive --format=tar --prefix=libusockets-${VERSION}/ HEAD | gzip > ../libusockets_${VERSION}.orig.tar.gz
       
-      - name: Build source package
-        if: matrix.arch == 'amd64'
-        run: |
-          rm -rf .github
-          dpkg-buildpackage -S -us -uc
+      - name: Remove .github directory
+        run: rm -rf .github
       
-      - name: Run autopkgtest
-        if: matrix.arch == 'amd64'
+      - name: Build source and binary packages
         run: |
-          cd ..
-          sudo autopkgtest *.dsc -- null
-        continue-on-error: true
-      
-      - name: Build binary package
-        run: |
-          rm -rf .github
           if [ "${{ matrix.arch }}" = "amd64" ]; then
-            dpkg-buildpackage -b -us -uc
+            dpkg-buildpackage -us -uc
           else
             dpkg-buildpackage -b -us -uc -a${{ matrix.arch }} || dpkg-buildpackage -b -us -uc
           fi
@@ -78,6 +67,13 @@ jobs:
       
       - name: Run lintian
         run: lintian -i artifacts/*.changes || true
+        continue-on-error: true
+      
+      - name: Run autopkgtest
+        if: matrix.arch == 'amd64'
+        run: |
+          cd artifacts
+          sudo autopkgtest *.dsc -- null
         continue-on-error: true
       
       - name: Upload artifacts
