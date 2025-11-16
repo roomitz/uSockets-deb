@@ -13,10 +13,17 @@ jobs:
         include:
           - arch: amd64
             debian_arch: amd64
+            cross_compile: false
           - arch: arm64
             debian_arch: arm64
+            cross_compile: true
+            cc: aarch64-linux-gnu-gcc
+            cross_prefix: aarch64-linux-gnu-
           - arch: armhf
             debian_arch: armhf
+            cross_compile: true
+            cc: arm-linux-gnueabihf-gcc
+            cross_prefix: arm-linux-gnueabihf-
     
     steps:
       - name: Checkout code
@@ -30,7 +37,7 @@ jobs:
           echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       
       - name: Set up QEMU
-        if: matrix.arch != 'amd64'
+        if: matrix.cross_compile
         uses: docker/setup-qemu-action@v3
         with:
           platforms: linux/amd64,linux/arm64,linux/arm/v7
@@ -47,7 +54,7 @@ jobs:
             dpkg-dev
       
       - name: Setup cross-compilation for ${{ matrix.arch }}
-        if: matrix.arch != 'amd64'
+        if: matrix.cross_compile
         run: |
           sudo dpkg --add-architecture ${{ matrix.debian_arch }}
           sudo sed -i 's/deb http/deb [arch=amd64] http/' /etc/apt/sources.list
@@ -71,15 +78,18 @@ jobs:
       - name: Build packages for ${{ matrix.arch }}
         run: |
           rm -rf .github
-          if [ "${{ matrix.arch }}" = "amd64" ]; then
+          if [ "${{ matrix.cross_compile }}" = "true" ]; then
+            echo "Building binary package for ${{ matrix.arch }} with cross-compilation"
+            export CC=${{ matrix.cc }}
+            export CXX=${{ matrix.cross_prefix }}g++
+            export AR=${{ matrix.cross_prefix }}ar
+            export RANLIB=${{ matrix.cross_prefix }}ranlib
+            export DEB_BUILD_OPTIONS="nocheck"
+            dpkg-buildpackage -b -us -uc -a${{ matrix.debian_arch }} -d --host-arch ${{ matrix.debian_arch }}
+          else
             echo "Building native amd64 package (source + binary)"
             dpkg-buildpackage -us -uc
-          else
-            echo "Building binary package for ${{ matrix.arch }}"
-            dpkg-buildpackage -b -us -uc -a${{ matrix.debian_arch }} -d
           fi
-        env:
-          DEB_BUILD_OPTIONS: nocheck
       
       - name: List built packages
         run: |
