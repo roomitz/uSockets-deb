@@ -12,7 +12,7 @@ override_dh_auto_install:
 	install -d debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)
 	install -d debian/tmp/usr/include
 	install -m 644 uSockets.a \
-		debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/libusockets.a
+		debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/libuSockets.a
 	install -m 644 src/libusockets.h \
 		debian/tmp/usr/include/libusockets.h
 
@@ -21,7 +21,7 @@ override_dh_auto_install:
 		debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/pkgconfig/libusockets.pc
 override_dh_strip:
 	# Skip stripping for static library with LTO
-	dh_strip -Xlibusockets.a
+	dh_strip -XlibuSockets.a
 
 override_dh_auto_clean:
 	$(MAKE) clean || true
