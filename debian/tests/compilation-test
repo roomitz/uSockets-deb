@@ -5,7 +5,7 @@ echo "Testing compilation with libusockets..."
 
 # checking dependencies
 command -v pkg-config >/dev/null 2>&1 || { echo "✗ pkg-config не установлен"; exit 1; }
-command -v gcc >/dev/null 2>&1 || { echo "✗ gcc не установлен"; exit 1; }
+command -v g++ >/dev/null 2>&1 || { echo "✗ g++ не установлен"; exit 1; }
 
 # temp directory
 TEST_DIR=$(mktemp -d)
@@ -29,8 +29,7 @@ LIBS=$(pkg-config --libs libusockets 2>/dev/null) || { echo "✗ Не удало
 echo "CFLAGS: $CFLAGS"
 echo "LIBS: $LIBS"
 
-
-if gcc $CFLAGS "$TEST_DIR/test_libusockets.c" $LIBS -o "$TEST_DIR/test_libusockets" 2>&1; then
+if g++ $CFLAGS "$TEST_DIR/test_libusockets.c" $LIBS -o "$TEST_DIR/test_libusockets" 2>&1; then
     echo "✓ Compilation successful"
 else
     echo "✗ Compilation failed"
@@ -49,4 +48,3 @@ else
     echo "✗ Binary not created or not executable"
     exit 1
 fi
-

@@ -22,9 +22,7 @@ echo "✓ Version: $VERSION"
 
 # checking CFLAGS (empty output is normal for this package)
 CFLAGS=$(pkg-config --cflags libusockets)
-if [ -z "$CFLAGS" ]; then
-    echo "✓ CFLAGS: $CFLAGS"
-fi
+echo "✓ CFLAGS: $CFLAGS"
 
 # checking LIBS
 LIBS=$(pkg-config --libs libusockets)
@@ -36,7 +34,6 @@ fi
 echo "✓ LIBS: $LIBS"
 
 #verify include and library directory variables
-
 INCLUDEDIR=$(pkg-config --variable=includedir libusockets)
 LIBDIR=$(pkg-config --variable=libdir libusockets)
 
@@ -57,7 +54,7 @@ cat > "$TEST_FILE" << 'EOF'
 int main() { return 0; }
 EOF
 
-if ! gcc $CFLAGS "$TEST_FILE" $LIBS -o /dev/null 2>/dev/null; then
+if ! g++ $CFLAGS "$TEST_FILE" $LIBS -o /dev/null 2>/dev/null; then
     echo "✗ pkg-config values are inconsistent or incomplete"
     exit 1
 fi

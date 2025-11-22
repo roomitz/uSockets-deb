@@ -1,10 +1,12 @@
 prefix=/usr
 exec_prefix=${prefix}
-libdir=${exec_prefix}/lib/x86_64-linux-gnu
+libdir=${pcfiledir}/../..
 includedir=${prefix}/include
 
 Name: libusockets
-Description: μSockets - Miniscule cross-platform eventing and networking
+Description: Miniscule cross-platform eventing, networking & crypto library
 Version: 0.8.8
-Libs: -L${libdir} -l:libuSockets.a -lssl -lcrypto -luv
+URL: https://github.com/uNetworking/uSockets
+
+Libs: -L${libdir} -l:libusockets.a -lssl -lcrypto -luv -lstdc++
 Cflags: -I${includedir}

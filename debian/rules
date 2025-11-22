@@ -1,6 +1,9 @@
 #!/usr/bin/make -f
 
 export DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DEB_CFLAGS_MAINT_APPEND = -Wall -pedantic
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
 %:
 	dh $@
@@ -11,18 +14,19 @@ override_dh_auto_build:
 override_dh_auto_install:
 	install -d debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)
 	install -d debian/tmp/usr/include
+	# Rename to lowercase (Debian convention)
 	install -m 644 uSockets.a \
-		debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/libuSockets.a
+	    debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/libusockets.a
 	install -m 644 src/libusockets.h \
-		debian/tmp/usr/include/libusockets.h
-
+	    debian/tmp/usr/include/libusockets.h
 	install -d debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/pkgconfig
 	install -m 644 debian/pkg-config/libusockets.pc \
-		debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/pkgconfig/libusockets.pc
+	    debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/pkgconfig/libusockets.pc
+
 override_dh_strip:
-	# Skip stripping for static library with LTO
-	dh_strip -XlibuSockets.a
+	# Don't strip static libraries
+	dh_strip -X.a
 
 override_dh_auto_clean:
 	$(MAKE) clean || true
-
+	dh_auto_clean

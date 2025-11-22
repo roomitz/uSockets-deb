@@ -3,14 +3,19 @@ Source: libusockets
 Version: 0.8.8-1
 Architecture: amd64
 Maintainer: Ruslan Dautov <r.dautoff2016@yandex.ru>
-Installed-Size: 785
-Suggests: libssl-dev, libuv1-dev
+Installed-Size: 788
+Depends: libssl-dev, libuv1-dev
 Section: libdevel
 Priority: optional
-Multi-Arch: same
+Multi-Arch: foreign
 Homepage: https://github.com/uNetworking/uSockets
-Description: Development files for libusockets
- uSockets is a minimal cross-platform eventing library.
+Description: Minimal cross-platform eventing library - development files
+ µSockets is a miniscule cross-platform eventing, networking and
+ cryptography library featuring a C API for async operations.
  .
- This package contains the header files and static library
- needed for developing applications using uSockets.
+ It provides comprehensive socket and networking functionality with
+ optional support for OpenSSL, libuv, QUIC, and HTTP/3 protocols.
+ .
+ This package contains the header files and static library.
+ Upstream intentionally provides only static library linking for
+ optimal performance and ABI stability.
