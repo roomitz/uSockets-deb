@@ -137,3 +137,4 @@ debian/libusockets-dev/DEBIAN/md5sums
 debian/libusockets-dev/DEBIAN/
 
 debian/libusockets-dev/DEBIAN/md5sums
+lintian-full.log

@@ -15,7 +15,7 @@ Rules-Requires-Root: no
 Package: libusockets-dev
 Section: libdevel
 Architecture: any
-Multi-Arch: foreign
+Multi-Arch: same
 Depends: ${misc:Depends},
          libssl-dev,
          libuv1-dev

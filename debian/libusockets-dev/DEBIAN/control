@@ -7,7 +7,7 @@ Installed-Size: 788
 Depends: libssl-dev, libuv1-dev
 Section: libdevel
 Priority: optional
-Multi-Arch: foreign
+Multi-Arch: same
 Homepage: https://github.com/uNetworking/uSockets
 Description: Minimal cross-platform eventing library - development files
  µSockets is a miniscule cross-platform eventing, networking and
